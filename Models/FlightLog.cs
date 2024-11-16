@@ -9,6 +9,8 @@ namespace KASCFlightLog.Models
 
         [Required]
         public string UserId { get; set; } = string.Empty;
+        [Required]
+        public DateTime FlightDate { get; set; }
 
         public string? ValidatedById { get; set; }
 
@@ -81,9 +83,11 @@ namespace KASCFlightLog.Models
         public DateTime? ValidatedAt { get; set; }
         public DateTime? PublishedAt { get; set; }
 
+        public string Status { get; set; } // "Pending", "Published", "Rejected"
+
         // Computed Properties
-        [Display(Name = "Status")]
-        public string Status => GetStatus();
+        [Display(Name = "Current Status")]
+        public string FlightStatus => GetStatus();
 
         private string GetStatus()
         {

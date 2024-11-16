@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using KASCFlightLog.Data;
 using KASCFlightLog.Models;
+using KASCFlightLog.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,3 +63,10 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+// Add services
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddSignalR();
+
+// Add SignalR hub endpoint
+app.MapHub<NotificationHub>("/notificationHub");

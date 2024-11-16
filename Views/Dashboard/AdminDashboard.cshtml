@@ -1,0 +1,141 @@
+﻿@model KASCFlightLog.ViewModels.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container">
+    <div class="row">
+        <!-- Notification Bell -->
+        <div class="col-12 mb-4">
+            <div class="dropdown">
+                <button class="btn btn-light position-relative" type="button" id="notificationDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-bell"></i>
+                    @if (Model.RecentNotifications.Any())
+                    {
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            @Model.RecentNotifications.Count()
+                        </span>
+                    }
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
+                    @foreach (var notification in Model.RecentNotifications)
+                    {
+                        <li><a class="dropdown-item" href="#">@notification.Message</a></li>
+                    }
+                </ul>
+            </div>
+        </div>
+
+        <!-- Pending Users -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Pending User Approvals</h5>
+                </div>
+                <div class="card-body">
+                    @if (!Model.PendingUsers.Any())
+                    {
+                        <p>No pending user approvals</p>
+                    }
+                    else
+                    {
+                        <div class="list-group">
+                            @foreach (var user in Model.PendingUsers)
+                            {
+                                <div class="list-group-item">
+                                    <h6>@user.FirstName @user.LastName</h6>
+                                    <p class="mb-1">@user.Email</p>
+                                    <small>Registered: @user.CreatedAt.ToString("g")</small>
+                                    <div class="mt-2">
+                                        <button class="btn btn-success btn-sm" onclick="approveUser('@user.Id')">
+                                            Approve
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="rejectUser('@user.Id')">
+                                            Reject
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Flight Logs -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Pending Flight Logs</h5>
+                </div>
+                <div class="card-body">
+                    @if (!Model.PendingFlightLogs.Any())
+                    {
+                        <p>No pending flight logs</p>
+                    }
+                    else
+                    {
+                        <div class="list-group">
+                            @foreach (var log in Model.PendingFlightLogs)
+                            {
+                                <div class="list-group-item">
+                                    <h6>Flight: @log.From to @log.To</h6>
+                                    <p class="mb-1">Pilot: @log.User.FirstName @log.User.LastName</p>
+                                    <small>Date: @log.CreatedAt.ToString("g")</small>
+                                    <div class="mt-2">
+                                        <button class="btn btn-success btn-sm" onclick="approveFlightLog('@log.Id')">
+                                            Approve
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="rejectFlightLog('@log.Id')">
+                                            Reject
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        async function approveUser(userId) {
+            try {
+                const response = await fetch(`/api/users/${userId}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (response.ok) {
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function rejectUser(userId) {
+            try {
+                const response = await fetch(`/api/users/${userId}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (response.ok) {
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Similar functions for flight log approval/rejection
+    </script>
+}

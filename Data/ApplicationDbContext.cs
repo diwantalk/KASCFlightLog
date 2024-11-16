@@ -12,23 +12,24 @@ namespace KASCFlightLog.Data
         }
 
         public DbSet<FlightLog> FlightLogs { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            // Configure the FlightLog relationships
+            // Configure relationships and constraints
             builder.Entity<FlightLog>()
                 .HasOne(f => f.User)
                 .WithMany()
                 .HasForeignKey(f => f.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<FlightLog>()
-                .HasOne(f => f.ValidatedBy)
+            builder.Entity<Notification>()
+                .HasOne(n => n.TargetUser)
                 .WithMany()
-                .HasForeignKey(f => f.ValidatedById)
-                .OnDelete(DeleteBehavior.Restrict); // Change to Restrict instead of Cascade
+                .HasForeignKey(n => n.TargetUserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
