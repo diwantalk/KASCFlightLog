@@ -5,10 +5,15 @@ namespace KASCFlightLog.Models
 {
     public class ApplicationUser : IdentityUser
     {
-        [Required]
-        public string Name { get; set; }
-
-        [Required]
-        public string IDNumber { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public UserRole Role { get; set; } = UserRole.User;
+        public ICollection<FlightLog> FlightLogs { get; set; }
+    }
+    public enum UserRole
+    {
+        User,
+        Staff,
+        Admin
     }
 }
