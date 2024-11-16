@@ -25,12 +25,17 @@ namespace KASCFlightLog.Data
                 entity.HasIndex(e => e.IDNumber).IsUnique();
             });
 
-            modelBuilder.Entity<FlightLog>(entity =>
-            {
-                entity.HasIndex(e => e.RegistrationNO);
-                entity.Property(e => e.IsValid).HasDefaultValue(false);
-                entity.Property(e => e.IsPublished).HasDefaultValue(false);
-            });
+            modelBuilder.Entity<FlightLog>()
+            .HasOne(f => f.User)
+            .WithMany(u => u.CreatedFlightLogs)
+            .HasForeignKey(f => f.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<FlightLog>()
+            .HasOne(f => f.ValidatedBy)
+            .WithMany(u => u.ValidatedFlightLogs)
+            .HasForeignKey(f => f.ValidatedById)
+            .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

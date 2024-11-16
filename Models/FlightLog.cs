@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KASCFlightLog.Models
 {
     public class FlightLog
     {
         public int Id { get; set; }
+
         [StringLength(20)]
         public string RegistrationNO { get; set; }
 
@@ -59,11 +61,22 @@ namespace KASCFlightLog.Models
         [Display(Name = "Is Published")]
         public bool IsPublished { get; set; }
 
+        // User Relations
+        public string UserId { get; set; }
+        [ForeignKey("UserId")]
+        public virtual ApplicationUser User { get; set; }
+
+        public string ValidatedById { get; set; }
+        [ForeignKey("ValidatedById")]
+        public virtual ApplicationUser ValidatedBy { get; set; }
+
         // Audit Properties
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string CreatedBy { get; set; }
         public DateTime? LastModifiedAt { get; set; }
         public string LastModifiedBy { get; set; }
+        public DateTime? ValidatedAt { get; set; }
+        public DateTime? PublishedAt { get; set; }
 
         // Computed Properties
         [Display(Name = "Status")]
@@ -80,6 +93,32 @@ namespace KASCFlightLog.Models
                 return "Partial";
 
             return "Complete";
+        }
+
+        // Helper method to set PilotInCommand from User
+        public void SetPilotInCommandFromUser(ApplicationUser user)
+        {
+            if (user != null && !string.IsNullOrEmpty(user.FirstName) && !string.IsNullOrEmpty(user.LastName))
+            {
+                PilotInCommand = $"{user.FirstName} {user.LastName}";
+            }
+        }
+
+        // Helper method to calculate duration
+        public void CalculateDuration()
+        {
+            if (TimeDeparture.HasValue && TimeArrival.HasValue)
+            {
+                if (TimeArrival.Value >= TimeDeparture.Value)
+                {
+                    TimeDuration = TimeArrival.Value - TimeDeparture.Value;
+                }
+                else
+                {
+                    // Handle case where flight crosses midnight
+                    TimeDuration = (TimeSpan.FromHours(24) - TimeDeparture.Value) + TimeArrival.Value;
+                }
+            }
         }
     }
 }
