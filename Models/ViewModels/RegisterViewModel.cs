@@ -1,28 +1,33 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace KASCFlightLog.Models.ViewModels
+namespace KASCFlightLog.ViewModels
 {
     public class RegisterViewModel
     {
         [Required]
+        [Display(Name = "First Name")]
+        public string FirstName { get; set; }
+
+        [Required]
+        [Display(Name = "Last Name")]
+        public string LastName { get; set; }
+
+        [Required]
         [EmailAddress]
-        public string Email { get; set; } = string.Empty;
+        public string Email { get; set; }
 
         [Required]
         [StringLength(100, MinimumLength = 8)]
         [DataType(DataType.Password)]
-        public string Password { get; set; } = string.Empty;
+        public string Password { get; set; }
 
         [DataType(DataType.Password)]
-        [Display(Name = "Confirm password")]
-        [Compare("Password", ErrorMessage = "The passwords do not match.")]
-        public string ConfirmPassword { get; set; } = string.Empty;
+        [Display(Name = "Confirm Password")]
+        [Compare("Password", ErrorMessage = "Passwords do not match.")]
+        public string ConfirmPassword { get; set; }
 
         [Required]
-        [Display(Name = "Full Name")]
-        public string FullName { get; set; } = string.Empty;
-
-        [Display(Name = "Notes")]
-        public string? Notes { get; set; }
+        [Display(Name = "Notes/Experience")]
+        public string Notes { get; set; }
     }
 }
