@@ -7,6 +7,17 @@ namespace KASCFlightLog.Models
     {
         public int Id { get; set; }
 
+        [Required]
+        public string UserId { get; set; } = string.Empty;
+
+        public string? ValidatedById { get; set; }
+
+        [ForeignKey("UserId")]
+        public ApplicationUser? User { get; set; }
+
+        [ForeignKey("ValidatedById")]
+        public ApplicationUser? ValidatedBy { get; set; }
+
         [StringLength(20)]
         public string RegistrationNO { get; set; }
 
@@ -61,15 +72,7 @@ namespace KASCFlightLog.Models
         [Display(Name = "Is Published")]
         public bool IsPublished { get; set; }
 
-        // User Relations
-        public string UserId { get; set; }
-        [ForeignKey("UserId")]
-        public virtual ApplicationUser User { get; set; }
-
-        public string ValidatedById { get; set; }
-        [ForeignKey("ValidatedById")]
-        public virtual ApplicationUser ValidatedBy { get; set; }
-
+       
         // Audit Properties
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string CreatedBy { get; set; }

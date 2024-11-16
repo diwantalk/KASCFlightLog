@@ -30,8 +30,13 @@ namespace KASCFlightLog.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IDNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsValidated = table.Column<bool>(type: "bit", nullable: false),
+                    ValidationDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ValidatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -50,58 +55,6 @@ namespace KASCFlightLog.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "FlightLogs",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    RegistrationNO = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    PilotInCommand = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    P3PAX = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    From = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    To = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    AuthorizedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Remarks = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    TimeDeparture = table.Column<TimeSpan>(type: "time", nullable: true),
-                    TimeArrival = table.Column<TimeSpan>(type: "time", nullable: true),
-                    NumberOfLandings = table.Column<int>(type: "int", nullable: true),
-                    TimeDuration = table.Column<TimeSpan>(type: "time", nullable: true),
-                    Note = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    IsValid = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    IsPublished = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_FlightLogs", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Staff",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    IDNumber = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                    Phone = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    Position = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Staff", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -210,6 +163,52 @@ namespace KASCFlightLog.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "FlightLogs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ValidatedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    RegistrationNO = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    PilotInCommand = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    P3PAX = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    From = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    To = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    AuthorizedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Remarks = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    TimeDeparture = table.Column<TimeSpan>(type: "time", nullable: true),
+                    TimeArrival = table.Column<TimeSpan>(type: "time", nullable: true),
+                    NumberOfLandings = table.Column<int>(type: "int", nullable: true),
+                    TimeDuration = table.Column<TimeSpan>(type: "time", nullable: true),
+                    Note = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    IsValid = table.Column<bool>(type: "bit", nullable: false),
+                    IsPublished = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ValidatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    PublishedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FlightLogs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_FlightLogs_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_FlightLogs_AspNetUsers_ValidatedById",
+                        column: x => x.ValidatedById,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -250,21 +249,14 @@ namespace KASCFlightLog.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_FlightLogs_RegistrationNO",
+                name: "IX_FlightLogs_UserId",
                 table: "FlightLogs",
-                column: "RegistrationNO");
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Staff_Email",
-                table: "Staff",
-                column: "Email",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Staff_IDNumber",
-                table: "Staff",
-                column: "IDNumber",
-                unique: true);
+                name: "IX_FlightLogs_ValidatedById",
+                table: "FlightLogs",
+                column: "ValidatedById");
         }
 
         /// <inheritdoc />
@@ -287,9 +279,6 @@ namespace KASCFlightLog.Migrations
 
             migrationBuilder.DropTable(
                 name: "FlightLogs");
-
-            migrationBuilder.DropTable(
-                name: "Staff");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

@@ -1,0 +1,35 @@
+﻿@model KASCFlightLog.Models.ViewModels.LoginViewModel
+<div class="row">
+    <div class="col-md-4 offset-md-4">
+        <h2>Log in</h2>
+        <form method="post" asp-route-returnurl="@ViewData["ReturnUrl"]">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="Email"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Password"></label>
+                <input asp-for="Password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <div class="checkbox">
+                    <label>
+                        <input asp-for="RememberMe" />
+                        @Html.DisplayNameFor(m => m.RememberMe)
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Log in</button>
+        </form>
+        <p>
+            <a asp-action="Register">Register as a new user</a>
+        </p>
+    </div>
+</div>

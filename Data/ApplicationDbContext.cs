@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using KASCFlightLog.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using KASCFlightLog.Models;
 
 namespace KASCFlightLog.Data
 {
@@ -11,31 +11,24 @@ namespace KASCFlightLog.Data
         {
         }
 
-        public DbSet<Staff> Staff { get; set; }
         public DbSet<FlightLog> FlightLogs { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder builder)
         {
-            base.OnModelCreating(modelBuilder);
+            base.OnModelCreating(builder);
 
-            // Configure your model relationships and constraints here
-            modelBuilder.Entity<Staff>(entity =>
-            {
-                entity.HasIndex(e => e.Email).IsUnique();
-                entity.HasIndex(e => e.IDNumber).IsUnique();
-            });
+            // Configure the FlightLog relationships
+            builder.Entity<FlightLog>()
+                .HasOne(f => f.User)
+                .WithMany()
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<FlightLog>()
-            .HasOne(f => f.User)
-            .WithMany(u => u.CreatedFlightLogs)
-            .HasForeignKey(f => f.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<FlightLog>()
-            .HasOne(f => f.ValidatedBy)
-            .WithMany(u => u.ValidatedFlightLogs)
-            .HasForeignKey(f => f.ValidatedById)
-            .OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<FlightLog>()
+                .HasOne(f => f.ValidatedBy)
+                .WithMany()
+                .HasForeignKey(f => f.ValidatedById)
+                .OnDelete(DeleteBehavior.Restrict); // Change to Restrict instead of Cascade
         }
     }
 }
