@@ -1,103 +1,73 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization;
-using KASCFlightLog.Data;
 using KASCFlightLog.Models;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using KASCFlightLog.Data;
 
 namespace KASCFlightLog.Controllers
 {
-    [Authorize] // Requires authentication for all actions
-    public class FlightLogsController : Controller
+    [Authorize]
+    public class FlightLogController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public FlightLogsController(ApplicationDbContext context)
+        public FlightLogController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
-        // GET: FlightLogs
+        // GET: FlightLog
         public async Task<IActionResult> Index()
         {
-            return View(await _context.FlightLogs
-                .Include(f => f.Staff)
-                .Include(f => f.User)
-                .ToListAsync());
+            var currentUser = await _userManager.GetUserAsync(User);
+            var isAdminOrStaff = User.IsInRole("Admin") || User.IsInRole("Staff");
+
+            // If admin or staff, show all logs, otherwise show only user's logs
+            var flightLogs = isAdminOrStaff
+                ? await _context.FlightLogs.Include(f => f.User).Include(f => f.ValidatedBy).ToListAsync()
+                : await _context.FlightLogs.Where(f => f.UserId == currentUser.Id).Include(f => f.User).Include(f => f.ValidatedBy).ToListAsync();
+
+            return View(flightLogs);
         }
 
-        // GET: FlightLogs/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var flightLog = await _context.FlightLogs
-                .Include(f => f.Staff)
-                .Include(f => f.User)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (flightLog == null)
-            {
-                return NotFound();
-            }
-
-            return View(flightLog);
-        }
-
-        // GET: FlightLogs/Create
-        [Authorize(Roles = "Admin,Staff")]
-        public IActionResult Create()
-        {
-            ViewData["StaffId"] = new SelectList(_context.Staff, "Id", "Name");
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Name");
-            return View();
-        }
-
-        // POST: FlightLogs/Create
+        // POST: FlightLog/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,Staff")]
-        public async Task<IActionResult> Create([Bind("Id,Date,AircraftType,Registration,PIC,FI,Route,TimeOut,TimeIn,TimeDeparture,TimeArrival,SingleTime,DualTime,InstructionalTime,P1Time,P2Time,NightTime,IFRTime,UserId,StaffId")] FlightLog flightLog)
+        public async Task<IActionResult> Create([Bind("RegistrationNO,PilotInCommand,P3PAX,From,To,AuthorizedBy,Remarks,TimeDeparture,TimeArrival,NumberOfLandings,Note")] FlightLog flightLog)
         {
             if (ModelState.IsValid)
             {
+                var currentUser = await _userManager.GetUserAsync(User);
+                flightLog.UserId = currentUser.Id;
+                flightLog.CreatedBy = currentUser.Id;
+                flightLog.CreatedAt = DateTime.UtcNow;
+
+                // If user is not staff/admin, automatically set pilot name
+                if (!User.IsInRole("Admin") && !User.IsInRole("Staff"))
+                {
+                    flightLog.PilotInCommand = $"{currentUser.FirstName} {currentUser.LastName}";
+                }
+
+                // Calculate duration
+                if (flightLog.TimeDeparture.HasValue && flightLog.TimeArrival.HasValue)
+                {
+                    flightLog.CalculateDuration();
+                }
+
                 _context.Add(flightLog);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["StaffId"] = new SelectList(_context.Staff, "Id", "Name", flightLog.StaffId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Name", flightLog.UserId);
             return View(flightLog);
         }
 
-        // GET: FlightLogs/Edit/5
-        [Authorize(Roles = "Admin,Staff")]
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var flightLog = await _context.FlightLogs.FindAsync(id);
-            if (flightLog == null)
-            {
-                return NotFound();
-            }
-            ViewData["StaffId"] = new SelectList(_context.Staff, "Id", "Name", flightLog.StaffId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Name", flightLog.UserId);
-            return View(flightLog);
-        }
-
-        // POST: FlightLogs/Edit/5
+        // POST: FlightLog/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,Staff")]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Date,AircraftType,Registration,PIC,FI,Route,TimeOut,TimeIn,TimeDeparture,TimeArrival,SingleTime,DualTime,InstructionalTime,P1Time,P2Time,NightTime,IFRTime,UserId,StaffId")] FlightLog flightLog)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,RegistrationNO,PilotInCommand,P3PAX,From,To,AuthorizedBy,Remarks,TimeDeparture,TimeArrival,NumberOfLandings,Note,IsValid,IsPublished")] FlightLog flightLog)
         {
             if (id != flightLog.Id)
             {
@@ -108,7 +78,50 @@ namespace KASCFlightLog.Controllers
             {
                 try
                 {
-                    _context.Update(flightLog);
+                    var currentUser = await _userManager.GetUserAsync(User);
+                    var existingLog = await _context.FlightLogs.FindAsync(id);
+
+                    if (existingLog == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Update properties
+                    existingLog.LastModifiedAt = DateTime.UtcNow;
+                    existingLog.LastModifiedBy = currentUser.Id;
+
+                    // Update validation status if user is staff/admin
+                    if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                    {
+                        existingLog.IsValid = flightLog.IsValid;
+                        existingLog.IsPublished = flightLog.IsPublished;
+                        if (flightLog.IsValid && existingLog.ValidatedById == null)
+                        {
+                            existingLog.ValidatedById = currentUser.Id;
+                            existingLog.ValidatedAt = DateTime.UtcNow;
+                        }
+                    }
+
+                    // Update other properties
+                    existingLog.RegistrationNO = flightLog.RegistrationNO;
+                    existingLog.PilotInCommand = flightLog.PilotInCommand;
+                    existingLog.P3PAX = flightLog.P3PAX;
+                    existingLog.From = flightLog.From;
+                    existingLog.To = flightLog.To;
+                    existingLog.AuthorizedBy = flightLog.AuthorizedBy;
+                    existingLog.Remarks = flightLog.Remarks;
+                    existingLog.TimeDeparture = flightLog.TimeDeparture;
+                    existingLog.TimeArrival = flightLog.TimeArrival;
+                    existingLog.NumberOfLandings = flightLog.NumberOfLandings;
+                    existingLog.Note = flightLog.Note;
+
+                    // Recalculate duration
+                    if (existingLog.TimeDeparture.HasValue && existingLog.TimeArrival.HasValue)
+                    {
+                        existingLog.CalculateDuration();
+                    }
+
+                    _context.Update(existingLog);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -124,42 +137,7 @@ namespace KASCFlightLog.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["StaffId"] = new SelectList(_context.Staff, "Id", "Name", flightLog.StaffId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Name", flightLog.UserId);
             return View(flightLog);
-        }
-
-        // GET: FlightLogs/Delete/5
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var flightLog = await _context.FlightLogs
-                .Include(f => f.Staff)
-                .Include(f => f.User)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (flightLog == null)
-            {
-                return NotFound();
-            }
-
-            return View(flightLog);
-        }
-
-        // POST: FlightLogs/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var flightLog = await _context.FlightLogs.FindAsync(id);
-            _context.FlightLogs.Remove(flightLog);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
         }
 
         private bool FlightLogExists(int id)

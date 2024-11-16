@@ -72,71 +72,103 @@ namespace KASCFlightLog
             app.MapRazorPages();
 
             // Initialize Roles and Admin User
+            // Add this after app builder configuration
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
+                var context = services.GetRequiredService<ApplicationDbContext>();
+                var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+                var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+
                 try
                 {
-                    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-                    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    // Ensure database is created
+                    context.Database.EnsureCreated();
 
-                    // Create roles
+                    // Seed Roles
                     string[] roleNames = { "Admin", "Staff", "User" };
                     foreach (var roleName in roleNames)
                     {
                         if (!await roleManager.RoleExistsAsync(roleName))
                         {
-                            var result = await roleManager.CreateAsync(new IdentityRole(roleName));
-                            if (!result.Succeeded)
-                            {
-                                logger.LogError("Failed to create role {Role}. Errors: {Errors}",
-                                    roleName, string.Join(", ", result.Errors.Select(e => e.Description)));
-                            }
+                            await roleManager.CreateAsync(new IdentityRole(roleName));
                         }
                     }
 
-                    // Create admin user
-                    var adminEmail = "admin@kascflight.com";
-                    var adminUser = await userManager.FindByEmailAsync(adminEmail);
-
+                    // Seed Admin User
+                    var adminUser = await userManager.FindByEmailAsync("admin@kasc.com");
                     if (adminUser == null)
                     {
-                        adminUser = new ApplicationUser
+                        var admin = new ApplicationUser
                         {
-                            UserName = adminEmail,
-                            Email = adminEmail,
+                            UserName = "admin@kasc.com",
+                            Email = "admin@kasc.com",
+                            FirstName = "Admin",
+                            LastName = "User",
+                            IdNumber = "ADMIN001",
                             EmailConfirmed = true,
-                            Name = "System Administrator",
-                            IDNumber = "ADMIN001"
+                            IsActive = true
                         };
 
-                        var result = await userManager.CreateAsync(adminUser, "Admin@123456");
-
+                        var result = await userManager.CreateAsync(admin, "Admin@123");
                         if (result.Succeeded)
                         {
-                            logger.LogInformation("Admin user created successfully");
-                            var roleResult = await userManager.AddToRoleAsync(adminUser, "Admin");
-
-                            if (!roleResult.Succeeded)
-                            {
-                                logger.LogError("Failed to add admin user to Admin role. Errors: {Errors}",
-                                    string.Join(", ", roleResult.Errors.Select(e => e.Description)));
-                            }
+                            await userManager.AddToRoleAsync(admin, "Admin");
                         }
-                        else
+                    }
+
+                    // Seed Staff User
+                    var staffUser = await userManager.FindByEmailAsync("staff@kasc.com");
+                    if (staffUser == null)
+                    {
+                        var staff = new ApplicationUser
                         {
-                            logger.LogError("Failed to create admin user. Errors: {Errors}",
-                                string.Join(", ", result.Errors.Select(e => e.Description)));
+                            UserName = "staff@kasc.com",
+                            Email = "staff@kasc.com",
+                            FirstName = "Staff",
+                            LastName = "User",
+                            IdNumber = "STAFF001",
+                            EmailConfirmed = true,
+                            IsActive = true
+                        };
+
+                        var result = await userManager.CreateAsync(staff, "Staff@123");
+                        if (result.Succeeded)
+                        {
+                            await userManager.AddToRoleAsync(staff, "Staff");
+                        }
+                    }
+
+                    // Seed Regular User
+                    var regularUser = await userManager.FindByEmailAsync("user@kasc.com");
+                    if (regularUser == null)
+                    {
+                        var user = new ApplicationUser
+                        {
+                            UserName = "user@kasc.com",
+                            Email = "user@kasc.com",
+                            FirstName = "Regular",
+                            LastName = "User",
+                            IdNumber = "USER001",
+                            EmailConfirmed = true,
+                            IsActive = true
+                        };
+
+                        var result = await userManager.CreateAsync(user, "User@123");
+                        if (result.Succeeded)
+                        {
+                            await userManager.AddToRoleAsync(user, "User");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
                     var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "An error occurred while seeding roles and users");
+                    logger.LogError(ex, "An error occurred while seeding the database.");
                 }
             }
+
+            // Continue with the rest of your Program.cs configuration
 
             await app.RunAsync();
         }

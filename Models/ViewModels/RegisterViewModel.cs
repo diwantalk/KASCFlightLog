@@ -4,6 +4,16 @@ namespace KASCFlightLog.Models.ViewModels
 {
     public class RegisterViewModel
     {
+        public RegisterViewModel()
+        {
+            FirstName = string.Empty;
+            LastName = string.Empty;
+            Email = string.Empty;
+            Password = string.Empty;
+            ConfirmPassword = string.Empty;
+            IdNumber = string.Empty;
+        }
+
         [Required(ErrorMessage = "First name is required")]
         [StringLength(50, ErrorMessage = "First name cannot be longer than 50 characters")]
         [Display(Name = "First Name")]
