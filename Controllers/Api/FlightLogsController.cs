@@ -5,7 +5,7 @@ using KASCFlightLog.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using KASCFlightLog.Services;
-using KASCFlightLog.DTOs;
+//using KASCFlightLog.DTOs;
 
 namespace KASCFlightLog.Controllers.Api
 {
@@ -29,7 +29,7 @@ namespace KASCFlightLog.Controllers.Api
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateFlightLog([FromBody] FlightLogDto dto)
+        public async Task<IActionResult> CreateFlightLog([FromBody] FlightLog dto)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -37,10 +37,10 @@ namespace KASCFlightLog.Controllers.Api
             {
                 UserId = user.Id,
                 FlightDate = dto.FlightDate,
-                RegistrationNO = dto.AircraftRegistration,
-                From = dto.DepartureLocation,
-                To = dto.ArrivalLocation,
-                Status = "Pending",
+                RegistrationNO = dto.RegistrationNO,
+                From = dto.From,
+                To = dto.To,
+                //Status = dto.Status,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -67,7 +67,7 @@ namespace KASCFlightLog.Controllers.Api
             if (flightLog == null)
                 return NotFound();
 
-            flightLog.Status = "Published";
+            //flightLog.Status = "Published";
             flightLog.PublishedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -93,7 +93,7 @@ namespace KASCFlightLog.Controllers.Api
             if (flightLog == null)
                 return NotFound();
 
-            flightLog.Status = "Rejected";
+            //flightLog.Status = "Rejected";
             flightLog.LastModifiedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();

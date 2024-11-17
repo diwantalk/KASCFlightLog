@@ -83,11 +83,11 @@ namespace KASCFlightLog.Models
         public DateTime? ValidatedAt { get; set; }
         public DateTime? PublishedAt { get; set; }
 
-        public string Status { get; set; } // "Pending", "Published", "Rejected"
+       
 
         // Computed Properties
         [Display(Name = "Current Status")]
-        public string FlightStatus => GetStatus();
+        public string Status => GetStatus();
 
         private string GetStatus()
         {

@@ -1,131 +1,162 @@
 ﻿@model KASCFlightLog.ViewModels.UserDashboardViewModel
-
 @{
     ViewData["Title"] = "User Dashboard";
 }
 
-<div class="container">
-    <div class="row">
-        <!-- My Flight Logs -->
-        <div class="col-md-6 mb-4">
+<div class="container-fluid mt-4">
+    <!-- User Profile Section -->
+    <div class="row mb-4">
+        <div class="col-md-4">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">My Flight Logs</h5>
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" 
-                            data-bs-target="#addFlightLogModal">
-                        Add New Log
-                    </button>
-                </div>
                 <div class="card-body">
-                    @if (!Model.MyFlightLogs.Any())
-                    {
-                        <p>No flight logs found</p>
-                    }
-                    else
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Route</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var log in Model.MyFlightLogs)
-                                    {
-                                        <tr>
-                                            <td>@log.FlightDate.ToString("d")</td>
-                                            <td>@log.From - @log.To</td>
-                                            <td>
-                                                <span class="badge bg-@(log.Status == "Published" ? "success" : 
-                                                    log.Status == "Pending" ? "warning" : "danger")">
-                                                    @log.Status
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
+                    <h5 class="card-title">Profile Information</h5>
+                    <p class="card-text">Name: @Model.FullName</p>
+                    <p class="card-text">Email: @Model.Email</p>
+                    <p class="card-text">Member since: @Model.JoinDate.ToString("MMMM dd, yyyy")</p>
                 </div>
             </div>
         </div>
-
-        <!-- Published Flights -->
-        <div class="col-md-6 mb-4">
+        <div class="col-md-8">
             <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Recent Published Flights</h5>
-                </div>
                 <div class="card-body">
-                    @if (!Model.PublishedFlightLogs.Any())
-                    {
-                        <p>No published flights found</p>
-                    }
-                    else
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Pilot</th>
-                                        <th>Route</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var log in Model.PublishedFlightLogs)
-                                    {
-                                        <tr>
-                                            <td>@log.FlightDate.ToString("d")</td>
-                                            <td>@log.User.FirstName @log.User.LastName</td>
-                                            <td>@log.From - @log.To</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
+                    <h5 class="card-title">Flight Statistics</h5>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h6>Total Flights</h6>
+                                <h3>@Model.TotalFlights</h3>
+                            </div>
                         </div>
-                    }
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h6>Incomplete</h6>
+                                <h3>@Model.IncompleteFlightLogs</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h6>Partial</h6>
+                                <h3>@Model.PartialFlightLogs</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h6>Complete</h6>
+                                <h3>@Model.CompleteFlightLogs</h3>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Add Flight Log Modal -->
-<div class="modal fade" id="addFlightLogModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New Flight Log</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <!-- Flight Logs Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title">My Flight Logs</h5>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFlightLogModal">
+                            Add New Flight Log
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Registration No.</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Valid</th>
+                                    <th>Published</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var log in Model.MyFlightLogs)
+                                {
+                                    <tr>
+                                        <td>@log.RegistrationNO</td>
+                                        <td>@log.FlightDate.ToString("MM/dd/yyyy")</td>
+                                        <td>
+                                            <span class="badge @(log.Status switch {
+                                                "Complete" => "bg-success",
+                                                "Partial" => "bg-warning",
+                                                _ => "bg-danger"
+                                            })">@log.Status</span>
+                                        </td>
+                                        <td>
+                                            @if (log.IsValid)
+                                            {
+                                                <i class="fas fa-check text-success"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-times text-danger"></i>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (log.IsPublished)
+                                            {
+                                                <i class="fas fa-check text-success"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-times text-danger"></i>
+                                            }
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-info" onclick="editFlightLog(@log.Id)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteFlightLog(@log.Id)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body">
-                <form id="addFlightLogForm">
-                    <div class="mb-3">
-                        <label class="form-label">Flight Date</label>
-                        <input type="date" class="form-control" name="flightDate" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Aircraft Registration</label>
-                        <input type="text" class="form-control" name="aircraftRegistration" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Departure Location</label>
-                        <input type="text" class="form-control" name="departureLocation" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Arrival Location</label>
-                        <input type="text" class="form-control" name="arrivalLocation" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="submitFlightLog()">Submit</button>
+        </div>
+    </div>
+
+    <!-- Add Flight Log Modal -->
+    <div class="modal fade" id="addFlightLogModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Flight Log</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addFlightLogForm">
+                        <div class="mb-3">
+                            <label for="registrationNo" class="form-label">Registration Number</label>
+                            <input type="text" class="form-control" id="registrationNo" name="registrationNo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="flightDate" class="form-label">Flight Date</label>
+                            <input type="date" class="form-control" id="flightDate" name="flightDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="Incomplete">Incomplete</option>
+                                <option value="Partial">Partial</option>
+                                <option value="Complete">Complete</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="submitFlightLog()">Save Flight Log</button>
+                </div>
             </div>
         </div>
     </div>
@@ -133,33 +164,46 @@
 
 @section Scripts {
     <script>
-        async function submitFlightLog() {
+        function submitFlightLog() {
             const form = document.getElementById('addFlightLogForm');
             const formData = new FormData(form);
 
-            try {
-                const response = await fetch('/api/flightlogs', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        flightDate: formData.get('flightDate'),
-                        aircraftRegistration: formData.get('aircraftRegistration'),
-                        departureLocation: formData.get('departureLocation'),
-                        arrivalLocation: formData.get('arrivalLocation')
-                    })
-                });
-
+            fetch('/api/flightlogs', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
                 if (response.ok) {
-                    $('#addFlightLogModal').modal('hide');
                     location.reload();
                 } else {
-                    alert('Error submitting flight log');
+                    console.error('Error adding flight log');
                 }
-            } catch (error) {
+            })
+            .catch(error => {
                 console.error('Error:', error);
-                alert('Error submitting flight log');
+            });
+        }
+
+        function editFlightLog(id) {
+            // Implement edit functionality
+            console.log('Edit flight log:', id);
+        }
+
+        function deleteFlightLog(id) {
+            if (confirm('Are you sure you want to delete this flight log?')) {
+                fetch(`/api/flightlogs/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        console.error('Error deleting flight log');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
             }
         }
     </script>

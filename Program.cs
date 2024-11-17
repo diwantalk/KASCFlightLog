@@ -35,6 +35,10 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromHours(24);
 });
 
+// Add services before building the application
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -52,21 +56,26 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Map controllers and SignalR hub
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Dashboard}/{action=Index}/{id?}");
+
+app.MapHub<NotificationHub>("/notificationHub");
 
 // Initialize Roles and Admin user
 using (var scope = app.Services.CreateScope())
 {
-    await DbInitializer.Initialize(scope.ServiceProvider);
+    var services = scope.ServiceProvider;
+    try
+    {
+        await DbInitializer.Initialize(services);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the database.");
+    }
 }
 
 app.Run();
-
-// Add services
-builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddSignalR();
-
-// Add SignalR hub endpoint
-app.MapHub<NotificationHub>("/notificationHub");
